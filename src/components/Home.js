@@ -2,7 +2,11 @@ import React, { useEffect } from "react";
 import styled from "styled-components";
 import ImgSlider from "./ImgSlider";
 import Viewers from "./Viewers";
-import Movies from "./Movies";
+import NewDisney from "./NewDisney";
+import Originals from "./Originals";
+import Recommends from "./Recommends";
+import Trendings from "./Trendings";
+//import Movies from "./Movies";
 import db from "../firebase";
 import { useDispatch } from "react-redux";
 import { setMovies } from "../features/movie/movieSlice";
@@ -10,19 +14,46 @@ import { setMovies } from "../features/movie/movieSlice";
 function Home() {
   const dispatch = useDispatch();
 
+  let recommends = [];
+  let newDisneys = [];
+  let originals = [];
+  let trending = [];
+
   useEffect(() => {
     //kigyűjtjük a moviekat az adatbázisból, onSnapshot készít egy másolatot (felvételt) a pillanatnyi adatbázisról
     db.collection("movies").onSnapshot((snapshot) => {
       //végig megyünk minden snapshot.docs-on (snapshotban van egy docs attributum (tömb) amiben a szükséges adatok vannak), és kinyerjük belőle
 
-      let tempMovies = snapshot.docs.map((doc) => {
+      snapshot.docs.map((doc) => {
         //console.log(doc.data());
         //doc.data() kinyeri az adatokat és külön az id-t, és egy új obj-ba tároljuk
-        return { id: doc.id, ...doc.data() };
+        switch (doc.data().type) {
+          case "recommend":
+            recommends = [...recommends, { id: doc.id, ...doc.data() }];
+            break;
+          case "new":
+            newDisneys = [...newDisneys, { id: doc.id, ...doc.data() }];
+            break;
+          case "original":
+            originals = [...originals, { id: doc.id, ...doc.data() }];
+            break;
+          case "trending":
+            trending = [...trending, { id: doc.id, ...doc.data() }];
+            break;
+        }
+
+        // return { id: doc.id, ...doc.data() };
       });
       //console.log(tempMovies);
 
-      dispatch(setMovies(tempMovies)); //eltároljuk az adatokat a storeban
+      dispatch(
+        setMovies({
+          recommend: recommends,
+          newDisney: newDisneys,
+          original: originals,
+          trending: trending,
+        })
+      ); //eltároljuk az adatokat a storeban
     });
   }, []);
 
@@ -30,7 +61,11 @@ function Home() {
     <Container>
       <ImgSlider />
       <Viewers />
-      <Movies />
+      <Recommends />
+      <NewDisney />
+      <Originals />
+      <Trendings />
+      {/*<Movies />*/}
     </Container>
   );
 }
@@ -43,6 +78,8 @@ const Container = styled.main`
   padding: 0 calc(3.5vw + 5px); //top-bottom: 0px , left-right: calc(3.5vw + 5px)
   position: relative;
   overflow-x: hidden; //így a slider nem lóg túl
+  //margin-bottom: 30px;
+  //overflow: hidden;
 
   &:before {
     background: url("/images/home-background.png") center center / cover

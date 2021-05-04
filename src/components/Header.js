@@ -1,37 +1,90 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import { selectUserName, selectUserPhoto, setUserLogin, setSignOut } from "../features/user/userSlice"
+import { useDispatch, useSelector } from "react-redux"
+import { auth, provider } from "../firebase"
+import { useHistory } from "react-router-dom"
 
 function Header() {
+  const userName = useSelector(selectUserName);
+  const userPhoto = useSelector(selectUserPhoto);
+  const history = useHistory();
+  const dispatch = useDispatch();
+
+  //hogy bejelentkezés utáni frissítéskor ne jelentkezzen ki
+  useEffect(() => {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        dispatch(setUserLogin({
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL
+        }))
+        history.push("/");
+      }
+    })
+  }, [])
+
+  const signIn = () => {
+    auth.signInWithPopup(provider)
+      .then((result) => {
+        //console.log(result);
+        let user = result.user;
+        dispatch(setUserLogin({
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL
+        }))
+        history.push("/");
+      })
+  };
+
+  const signOut = () => {
+    auth.signOut()
+      .then(() => {
+        dispatch(setSignOut());
+        history.push("/login");
+      })
+  };
+
   return (
     <Nav>
       <Logo src="/images/logo.svg" />
-      <NavMenu>
-        <a>
-          <img src="/images/home-icon.svg" alt="" srcset="" />
-          <span>Home</span>
-        </a>
-        <a>
-          <img src="/images/search-icon.svg" alt="" srcset="" />
-          <span>Search</span>
-        </a>
-        <a>
-          <img src="/images/watchlist-icon.svg" alt="" srcset="" />
-          <span>Watchlist</span>
-        </a>
-        <a>
-          <img src="/images/original-icon.svg" alt="" srcset="" />
-          <span>Originals</span>
-        </a>
-        <a>
-          <img src="/images/movie-icon.svg" alt="" srcset="" />
-          <span>Movies</span>
-        </a>
-        <a>
-          <img src="/images/series-icon.svg" alt="" srcset="" />
-          <span>Series</span>
-        </a>
-      </NavMenu>
-      <UserImage src="https://lh3.googleusercontent.com/-RIWSU1vQ-Ro/VkOr-5TxX4I/AAAAAAAAGeo/H15djWnm4c4O10gzL34gs40K5nPwpD6jgCEwYBhgLKtQDAL1OcqyH_C_4dP6W9lKCZ3l8MOzQ2kBVvgdJxE3o0Om01CX-w2GgkupQ-fAe4zuHhP4ctvBcH1hB1lrZermzoRcAZ2a1G550iJTAiq-prUj5LscftQmKLCSzNjM7wAhzM8bCUk_yrxB-lwu-QdYoICkw5trJmMfjr3DtVOqw3Xeg5fsAi6NvA1AGNiOaQYz5EV_dYqrbb7MnohaiZj6Liu-pMUlwj-QhKwv_93r1245S5dxBsPBpQUTA4cgn96l09neXr2ux39-0Euc6NLIW4Z8YddQjZ3bxlWiJ97ReD0Q2aQUygUC9QXpEBWSHgZUUkPMdynP5SmVuCDGQSRiE_LAdW71XDQaLrfQNlNFyGdL6cOgO_RuE6Zy8t4KS6wZui1mfcraponRjmgiLQ-HOcR5dmgRHxLKuT2mqq2SP4Sc2OANYYlNG-02IDNCZgd_O1sW4zG0sCSt4X3yrnZfxShy7jFTyIdDH6o_PpjQA1hUVvvMfY0QGE2A-EYpo3LrUsANm6LfuKtyCZrFlWMzSnftrYJG-er-TQVRGi4raSMtmH58Gc02vvBU_WGPxXllJv6SKHZMt5TOxt6sLC9_H57kC5sMlsfMBPlO_O84YCE4BP1GnMPfJv4QG/w140-h140-p/BAI9zpjQ.jpg" />
+
+      {!userName ?
+        <LoginContainer><Login onClick={signIn}>Login</Login></LoginContainer>
+        :
+        <>
+          <NavMenu>
+            <a>
+              <img src="/images/home-icon.svg" alt="" srcset="" />
+              <span>Home</span>
+            </a>
+            <a>
+              <img src="/images/search-icon.svg" alt="" srcset="" />
+              <span>Search</span>
+            </a>
+            <a>
+              <img src="/images/watchlist-icon.svg" alt="" srcset="" />
+              <span>Watchlist</span>
+            </a>
+            <a>
+              <img src="/images/original-icon.svg" alt="" srcset="" />
+              <span>Originals</span>
+            </a>
+            <a>
+              <img src="/images/movie-icon.svg" alt="" srcset="" />
+              <span>Movies</span>
+            </a>
+            <a>
+              <img src="/images/series-icon.svg" alt="" srcset="" />
+              <span>Series</span>
+            </a>
+          </NavMenu>
+          <UserImage src={userPhoto} onClick={signOut} />
+        </>
+      }
+
     </Nav>
   );
 }
@@ -50,6 +103,32 @@ const Nav = styled.nav`
 const Logo = styled.img`
   width: 80px;
 `;
+
+const Login = styled.div`
+  border-radius: 4px;
+  border: 1px solid #f9f9f9;
+  padding: 8px 16px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: rgba(0,0,0,0.6);
+  transition: all 0.2s ease 0s;
+  cursor: pointer;
+  
+
+  &:hover{
+    background: #f9f9f9;
+    color: #000;
+    border-color: transparent;
+  }
+`;
+
+const LoginContainer = styled.div`
+flex:1;
+display: flex;
+align-items: center;
+justify-content: flex-end; //jobbra igazítja
+`;
+
 const NavMenu = styled.div`
   display: flex;
   flex: 1;
