@@ -78,8 +78,6 @@ const Container = styled.main`
   padding: 0 calc(3.5vw + 5px); //top-bottom: 0px , left-right: calc(3.5vw + 5px)
   position: relative;
   overflow-x: hidden; //így a slider nem lóg túl
-  //margin-bottom: 30px;
-  //overflow: hidden;
 
   &:before {
     background: url("/images/home-background.png") center center / cover
